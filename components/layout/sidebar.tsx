@@ -8,7 +8,8 @@ import {
   Calendar,
   BookOpen,
   Settings,
-  GraduationCap
+  GraduationCap,
+  BarChart
 } from "lucide-react";
 
 const routes = [
@@ -29,6 +30,12 @@ const routes = [
     icon: BookOpen,
     href: "/materials",
     color: "text-pink-700",
+  },
+  {
+    label: "Analytics",
+    icon: BarChart,
+    href: "/analytics",
+    color: "text-orange-500",
   },
   {
     label: "Settings",

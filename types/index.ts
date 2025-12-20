@@ -29,6 +29,16 @@ export interface TestPreparation {
     totalEstimatedMinutes: number;
     completedMinutes: number;
     progressPercentage: number;
+    color?: string;
+    metadata?: {
+        recommendations?: {
+            focusAreas: string[];
+            studyTechniques: string[];
+            timeline: string;
+            customRecommendations: string;
+        };
+        [key: string]: any;
+    };
 }
 
 // Study Material
@@ -85,6 +95,7 @@ export interface Task {
     status: 'pending' | 'in_progress' | 'completed' | 'partially_completed' | 'skipped';
     completedAt?: Date;
     notes?: string;
+    tags?: string[];
 }
 
 // Daily Schedule

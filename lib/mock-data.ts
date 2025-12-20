@@ -35,6 +35,23 @@ export const mockTestPrep: TestPreparation = {
     totalEstimatedMinutes: 1800, // 30 hours
     completedMinutes: 360, // 6 hours completed
     progressPercentage: 20,
+    color: '#3b82f6',
+    metadata: {
+        recommendations: {
+            focusAreas: [
+                'First Law of Thermodynamics',
+                'Enthalpy Calculations',
+                'State Functions vs Path Functions'
+            ],
+            studyTechniques: [
+                'Active Recall on Formulae',
+                'Practice Problems (set 5)',
+                'Feynman Technique for Entropy'
+            ],
+            timeline: 'You are on track. Focus 40% of time on entropy tomorrow.',
+            customRecommendations: 'Your progress in Chapter 5 is steady. Consider revisiting the Gibbs Free Energy derivation if you struggle with problem set 5.'
+        }
+    }
 };
 
 export const mockMaterials: StudyMaterial[] = [
@@ -129,6 +146,7 @@ const mockTasks: Task[] = [
         estimatedMinutes: 45,
         actualMinutes: 0,
         status: 'pending',
+        tags: ['essential'],
     },
     {
         id: 'task-2',
@@ -161,6 +179,7 @@ const mockTasks: Task[] = [
         estimatedMinutes: 35,
         actualMinutes: 0,
         status: 'pending',
+        tags: ['essential'],
     },
 ];
 
