@@ -1,14 +1,16 @@
 "use client";
 
-import { FileText, File, X, GraduationCap, Plus } from "lucide-react";
+import { FileText, File, X, GraduationCap, Plus, Sparkles } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import dayjs from "dayjs";
 import { CreateTestDialog } from "@/components/shared/create-test-dialog";
+import { TaskItem } from "@/components/shared/task-item";
+import type { Task } from "@/types";
 
 export default function MaterialsPage() {
-    const { materials, removeMaterial, testPreparations, setCurrentTestPrep } = useStore();
+    const { materials, removeMaterial, testPreparations, setCurrentTestPrep, schedules } = useStore();
 
     const formatFileSize = (bytes: number) => {
         if (bytes < 1024) return bytes + ' B';
@@ -40,83 +42,131 @@ export default function MaterialsPage() {
 
                 {testPreparations.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {testPreparations.map((tp) => (
-                            <Card
-                                key={tp.id}
-                                className="group cursor-pointer hover:shadow-xl transition-all border-none overflow-hidden relative bg-white shadow-sm"
-                                onClick={() => {
-                                    setCurrentTestPrep(tp);
-                                    window.location.href = `/study-plan/${tp.id}`;
-                                }}
-                            >
-                                <div
-                                    className="absolute top-0 left-0 w-full h-1.5"
-                                    style={{ backgroundColor: tp.color || '#3b82f6' }}
-                                />
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-center justify-between">
-                                        <div
-                                            className="p-2.5 rounded-xl bg-slate-50 group-hover:bg-blue-50 transition-colors shadow-inner"
-                                            style={{ color: tp.color || '#3b82f6' }}
-                                        >
-                                            <GraduationCap className="h-6 w-6" />
-                                        </div>
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                                {dayjs(tp.testDate).diff(dayjs(), 'day')} Days
-                                            </span>
-                                            <span className="text-[8px] font-bold text-slate-300 uppercase underline decoration-blue-500/30">Remaining</span>
-                                        </div>
-                                    </div>
-                                    <CardTitle className="text-xl mt-4 group-hover:text-blue-600 transition-colors font-black text-slate-800">
-                                        {tp.testName}
-                                    </CardTitle>
-                                    <CardDescription className="text-xs font-medium">
-                                        {dayjs(tp.testDate).format('dddd, MMMM D, YYYY')}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-5">
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between text-xs">
-                                                <span className="text-slate-500 font-bold uppercase tracking-tight">Daily Efficiency</span>
-                                                <span className="font-black text-slate-700">{tp.progressPercentage}%</span>
+                        {testPreparations.map((tp) => {
+                            // Find all schedules for this test prep and sort by date
+                            const tpSchedules = schedules
+                                .filter(s => s.testPrepId === tp.id)
+                                .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
+
+                            // Find the first schedule that is today or in the future AND has tasks
+                            const currentSchedule = tpSchedules.find(s =>
+                                (dayjs(s.date).isSame(dayjs(), 'day') || dayjs(s.date).isAfter(dayjs(), 'day')) &&
+                                s.tasks.length > 0
+                            );
+
+                            // Get up to 2 essential tasks, or fallback to any 2 pending tasks
+                            let previewTasks = currentSchedule?.tasks
+                                .filter(t => t.tags?.includes('essential') && t.status !== 'completed')
+                                .slice(0, 2) || [];
+
+                            if (previewTasks.length === 0 && currentSchedule) {
+                                previewTasks = currentSchedule.tasks
+                                    .filter(t => t.status !== 'completed')
+                                    .slice(0, 2);
+                            }
+
+                            return (
+                                <Card
+                                    key={tp.id}
+                                    className="group cursor-pointer hover:shadow-xl transition-all border-none overflow-hidden relative bg-white shadow-sm flex flex-col"
+                                    onClick={() => {
+                                        setCurrentTestPrep(tp);
+                                        window.location.href = `/study-plan/${tp.id}`;
+                                    }}
+                                >
+                                    <div
+                                        className="absolute top-0 left-0 w-full h-1.5"
+                                        style={{ backgroundColor: tp.color || '#3b82f6' }}
+                                    />
+                                    <CardHeader className="pb-2">
+                                        <div className="flex items-center justify-between">
+                                            <div
+                                                className="p-2.5 rounded-xl bg-slate-50 group-hover:bg-blue-50 transition-colors shadow-inner"
+                                                style={{ color: tp.color || '#3b82f6' }}
+                                            >
+                                                <GraduationCap className="h-6 w-6" />
                                             </div>
-                                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden shadow-inner">
-                                                <div
-                                                    className="h-full transition-all duration-1000 ease-in-out"
-                                                    style={{
-                                                        width: `${tp.progressPercentage}% `,
-                                                        backgroundColor: tp.color || '#3b82f6'
-                                                    }}
-                                                />
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                    {dayjs(tp.testDate).diff(dayjs(), 'day')} Days
+                                                </span>
+                                                <span className="text-[8px] font-bold text-slate-300 uppercase underline decoration-blue-500/30">Remaining</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                                            <div className="flex -space-x-2">
+                                        <CardTitle className="text-xl mt-4 group-hover:text-blue-600 transition-colors font-black text-slate-800">
+                                            {tp.testName}
+                                        </CardTitle>
+                                        <CardDescription className="text-xs font-medium">
+                                            {dayjs(tp.testDate).format('dddd, MMMM D, YYYY')}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex-1 flex flex-col pt-0">
+                                        <div className="space-y-4 flex-1">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between text-[10px] mb-1">
+                                                    <span className="text-slate-400 font-bold uppercase tracking-tight">Overall Progress</span>
+                                                    <span className="font-black text-slate-600">{tp.progressPercentage}%</span>
+                                                </div>
+                                                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden shadow-inner">
+                                                    <div
+                                                        className="h-full transition-all duration-1000 ease-in-out"
+                                                        style={{
+                                                            width: `${tp.progressPercentage}% `,
+                                                            backgroundColor: tp.color || '#3b82f6'
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* AI Essential Tasks Preview */}
+                                            {previewTasks.length > 0 && (
+                                                <div className="space-y-2 py-3 border-y border-slate-50">
+                                                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                                                        <Sparkles className="h-2.5 w-2.5 text-orange-400" />
+                                                        Upcoming Essentials
+                                                    </div>
+                                                    {previewTasks.map((task: Task) => {
+                                                        const material = task.materialReferences?.[0]?.materialId
+                                                            ? materials.find(m => m.id === task.materialReferences[0].materialId)
+                                                            : undefined;
+                                                        return (
+                                                            <TaskItem
+                                                                key={task.id}
+                                                                task={task}
+                                                                material={material}
+                                                                variant="compact"
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-4 mt-auto">
+                                            <div className="flex -space-x-1.5">
                                                 {materials.filter(m => m.testPrepId === tp.id).slice(0, 3).map((m, i) => (
                                                     <div
                                                         key={i}
-                                                        className="w-7 h-7 rounded-full bg-white border-2 border-slate-50 flex items-center justify-center text-[10px] font-black shadow-sm text-slate-600"
+                                                        className="w-6 h-6 rounded-full bg-white border-2 border-slate-50 flex items-center justify-center text-[9px] font-black shadow-sm text-slate-600"
                                                         title={m.fileName}
                                                     >
                                                         {m.fileName[0]}
                                                     </div>
                                                 ))}
                                                 {materials.filter(m => m.testPrepId === tp.id).length > 3 && (
-                                                    <div className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[8px] font-black text-slate-500">
+                                                    <div className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[7px] font-black text-slate-500">
                                                         +{materials.filter(m => m.testPrepId === tp.id).length - 3}
                                                     </div>
                                                 )}
                                             </div>
-                                            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-[10px] font-black uppercase tracking-widest h-8 px-3">
-                                                Open Schedule
+                                            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-[10px] font-black uppercase tracking-widest h-7 px-3">
+                                                View Timeline
                                             </Button>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                    </CardContent>
+                                </Card>
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
