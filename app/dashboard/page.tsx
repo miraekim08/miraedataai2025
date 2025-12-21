@@ -148,7 +148,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Main Content */}
-                    <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Main Col - Advice & Today's Focus */}
                         <div className="lg:col-span-2 space-y-6">
                             <StudyAdvice advice={currentTestPrep.metadata?.recommendations} />
